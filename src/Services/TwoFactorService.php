@@ -112,6 +112,26 @@ class TwoFactorService
     }
 
     /**
+     * Check if the user has Email OTP enabled.
+     */
+    public function userHasEmailOtp(?Authenticatable $user): bool
+    {
+        if (!$user || empty($user->email)) {
+            return false;
+        }
+
+        if (method_exists($user, 'hasEnabledEmailOtp')) {
+            return (bool) $user->hasEnabledEmailOtp();
+        }
+
+        if (isset($user->email_otp_enabled)) {
+            return (bool) $user->email_otp_enabled;
+        }
+
+        return false;
+    }
+
+    /**
      * Get all active 2FA methods for a given user based on settings and enrollment.
      *
      * @return array<string> List of available methods (e.g. ['passkey', 'authenticator', 'email'])
@@ -135,7 +155,7 @@ class TwoFactorService
         }
 
         // 3. Email OTP
-        if ($this->isEmailOtpEnabled() && !empty($user->email)) {
+        if ($this->isEmailOtpEnabled() && $this->userHasEmailOtp($user)) {
             $methods[] = 'email';
         }
 

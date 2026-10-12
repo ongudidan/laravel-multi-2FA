@@ -6,6 +6,8 @@ use Ongudidan\Multi2fa\Http\Controllers\LoginChallengeSelectionController;
 use Ongudidan\Multi2fa\Http\Controllers\TwoFactorSettingsController;
 use Ongudidan\Multi2fa\Http\Controllers\PasskeySettingsController;
 
+use Ongudidan\Multi2fa\Http\Controllers\EmailOtpSettingsController;
+
 Route::middleware(config('multi-2fa.routes.middleware', ['web']))->group(function () {
     // Challenge Selection
     Route::get('/login-challenge-selection', [LoginChallengeSelectionController::class, 'show'])
@@ -26,6 +28,12 @@ Route::middleware(config('multi-2fa.routes.middleware', ['web']))->group(functio
         // Two-Factor TOTP Settings
         Route::get('/settings/two-factor', [TwoFactorSettingsController::class, 'show'])
             ->name('multi-2fa.settings.two-factor.show');
+
+        // Email OTP Settings
+        Route::get('/settings/email-otp', [EmailOtpSettingsController::class, 'show'])
+            ->name('multi-2fa.settings.email-otp.show');
+        Route::post('/settings/email-otp', [EmailOtpSettingsController::class, 'update'])
+            ->name('multi-2fa.settings.email-otp.update');
 
         // Passkeys Settings
         Route::get('/settings/passkeys', [PasskeySettingsController::class, 'index'])
