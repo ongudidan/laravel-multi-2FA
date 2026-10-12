@@ -18,7 +18,7 @@ class LoginChallengeSelectionController extends Controller
     /**
      * Show the verification method selection screen.
      */
-    public function show(Request $request): Response|RedirectResponse
+    public function show(Request $request): mixed
     {
         if (!$request->session()->has('login_challenge.id')) {
             $userId = $request->session()->get('login_otp.id') ?? $request->session()->get('login.id');

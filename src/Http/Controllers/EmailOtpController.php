@@ -19,7 +19,7 @@ class EmailOtpController extends Controller
     /**
      * Show the email OTP verification form.
      */
-    public function show(Request $request): Response|RedirectResponse
+    public function show(Request $request): mixed
     {
         if (!$request->session()->has('login_otp.id')) {
             return redirect('/login');
