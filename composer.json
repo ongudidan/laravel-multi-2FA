@@ -1,6 +1,6 @@
 {
     "name": "ongudidan/laravel-multi-2fa",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "Unified Multi-Method Two-Factor Authentication for Laravel: Email OTP, Authenticator App (TOTP via Fortify), and Passkeys (WebAuthn).",
     "type": "library",
     "license": "MIT",
