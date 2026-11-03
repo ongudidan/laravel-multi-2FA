@@ -72,13 +72,21 @@
                 msgBox.className = 'hidden';
 
                 try {
-                    const res = await fetch('/passkeys/register-options', {
+                    const res = await fetch('{{ route("passkey.registration-options") }}', {
                         headers: { 'Accept': 'application/json' }
                     });
-                    if (!res.ok) throw new Error('Could not fetch registration options.');
-                    const options = await res.json();
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        throw new Error(err.message || 'Could not fetch registration options.');
+                    }
+                    const data = await res.json();
+                    const options = data.options ?? data;
 
-                    const decodeBase64 = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+                    const decodeBase64 = (s) => {
+                        const base64 = String(s).replace(/-/g, '+').replace(/_/g, '/');
+                        const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+                        return Uint8Array.from(atob(padded), c => c.charCodeAt(0));
+                    };
                     options.challenge = decodeBase64(options.challenge);
                     options.user.id = decodeBase64(options.user.id);
                     if (options.excludeCredentials) {
@@ -90,7 +98,7 @@
 
                     const encodeBase64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
                     
-                    const saveRes = await fetch('/passkeys', {
+                    const saveRes = await fetch('{{ route("passkey.store") }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -99,12 +107,15 @@
                         },
                         body: JSON.stringify({
                             name: name.trim(),
-                            id: credential.id,
-                            rawId: encodeBase64(credential.rawId),
-                            type: credential.type,
-                            response: {
-                                clientDataJSON: encodeBase64(credential.response.clientDataJSON),
-                                attestationObject: encodeBase64(credential.response.attestationObject)
+                            credential: {
+                                id: credential.id,
+                                rawId: encodeBase64(credential.rawId),
+                                type: credential.type,
+                                response: {
+                                    clientDataJSON: encodeBase64(credential.response.clientDataJSON),
+                                    attestationObject: encodeBase64(credential.response.attestationObject),
+                                    ...(typeof credential.response.getTransports === 'function' ? { transports: credential.response.getTransports() } : {})
+                                }
                             }
                         })
                     });
@@ -112,7 +123,8 @@
                     if (saveRes.ok) {
                         window.location.reload();
                     } else {
-                        throw new Error('Failed to save passkey on server.');
+                        const saveErr = await saveRes.json().catch(() => ({}));
+                        throw new Error(saveErr.message || 'Failed to save passkey on server.');
                     }
                 } catch (e) {
                     if (e.name !== 'NotAllowedError') {

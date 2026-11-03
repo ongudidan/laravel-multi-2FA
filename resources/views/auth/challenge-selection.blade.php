@@ -104,14 +104,19 @@
                 errBox.classList.add('hidden');
                 try {
                     // Laravel Passkeys WebAuthn options endpoint
-                    const res = await fetch('/passkeys/authenticate-options', {
+                    const res = await fetch('{{ route("passkey.login-options") }}', {
                         headers: { 'Accept': 'application/json' }
                     });
                     if (!res.ok) throw new Error('Could not initiate passkey authentication.');
-                    const options = await res.json();
+                    const data = await res.json();
+                    const options = data.options ?? data;
                     
                     // Simple base64 decoding helper
-                    const decodeBase64 = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+                    const decodeBase64 = (s) => {
+                        const base64 = String(s).replace(/-/g, '+').replace(/_/g, '/');
+                        const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+                        return Uint8Array.from(atob(padded), c => c.charCodeAt(0));
+                    };
                     options.challenge = decodeBase64(options.challenge);
                     if (options.allowCredentials) {
                         options.allowCredentials = options.allowCredentials.map(c => ({ ...c, id: decodeBase64(c.id) }));
@@ -122,7 +127,7 @@
 
                     const encodeBase64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
                     
-                    const verifyRes = await fetch('/passkeys/authenticate', {
+                    const verifyRes = await fetch('{{ route("passkey.login") }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -130,14 +135,16 @@
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
                         body: JSON.stringify({
-                            id: credential.id,
-                            rawId: encodeBase64(credential.rawId),
-                            type: credential.type,
-                            response: {
-                                clientDataJSON: encodeBase64(credential.response.clientDataJSON),
-                                authenticatorData: encodeBase64(credential.response.authenticatorData),
-                                signature: encodeBase64(credential.response.signature),
-                                userHandle: credential.response.userHandle ? encodeBase64(credential.response.userHandle) : null
+                            credential: {
+                                id: credential.id,
+                                rawId: encodeBase64(credential.rawId),
+                                type: credential.type,
+                                response: {
+                                    clientDataJSON: encodeBase64(credential.response.clientDataJSON),
+                                    authenticatorData: encodeBase64(credential.response.authenticatorData),
+                                    signature: encodeBase64(credential.response.signature),
+                                    userHandle: credential.response.userHandle ? encodeBase64(credential.response.userHandle) : null
+                                }
                             }
                         })
                     });
@@ -145,7 +152,8 @@
                     if (verifyRes.ok) {
                         window.location.href = '{{ config("multi-2fa.home") ?? config("fortify.home", "/dashboard") }}';
                     } else {
-                        throw new Error('Passkey verification failed.');
+                        const verifyErr = await verifyRes.json().catch(() => ({}));
+                        throw new Error(verifyErr.message || 'Passkey verification failed.');
                     }
                 } catch (e) {
                     if (e.name !== 'NotAllowedError') {
