@@ -2,12 +2,10 @@
 
 namespace Ongudidan\Multi2fa\Http\Controllers;
 
-use Ongudidan\Multi2fa\Services\TwoFactorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Ongudidan\Multi2fa\Services\TwoFactorService;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class EmailOtpController extends Controller
@@ -21,7 +19,7 @@ class EmailOtpController extends Controller
      */
     public function show(Request $request): mixed
     {
-        if (!$request->session()->has('login_otp.id')) {
+        if (! $request->session()->has('login_otp.id')) {
             return redirect('/login');
         }
 
@@ -41,7 +39,7 @@ class EmailOtpController extends Controller
      */
     public function verify(Request $request): SymfonyResponse
     {
-        if (!$request->session()->has('login_otp.id')) {
+        if (! $request->session()->has('login_otp.id')) {
             return redirect('/login');
         }
 
@@ -64,12 +62,12 @@ class EmailOtpController extends Controller
      */
     public function resend(Request $request): RedirectResponse
     {
-        if (!$request->session()->has('login_otp.id')) {
+        if (! $request->session()->has('login_otp.id')) {
             return redirect('/login');
         }
 
         $user = $this->twoFactorService->resendLoginOtp($request);
-        if (!$user) {
+        if (! $user) {
             return redirect('/login');
         }
 

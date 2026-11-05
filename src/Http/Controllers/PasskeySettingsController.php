@@ -2,13 +2,11 @@
 
 namespace Ongudidan\Multi2fa\Http\Controllers;
 
-use Ongudidan\Multi2fa\Services\TwoFactorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
 use Laravel\Passkeys\Passkey;
+use Ongudidan\Multi2fa\Services\TwoFactorService;
 
 class PasskeySettingsController extends Controller
 {

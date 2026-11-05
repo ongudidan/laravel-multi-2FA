@@ -2,11 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use Ongudidan\Multi2fa\Http\Controllers\EmailOtpController;
-use Ongudidan\Multi2fa\Http\Controllers\LoginChallengeSelectionController;
-use Ongudidan\Multi2fa\Http\Controllers\TwoFactorSettingsController;
-use Ongudidan\Multi2fa\Http\Controllers\PasskeySettingsController;
-
 use Ongudidan\Multi2fa\Http\Controllers\EmailOtpSettingsController;
+use Ongudidan\Multi2fa\Http\Controllers\LoginChallengeSelectionController;
+use Ongudidan\Multi2fa\Http\Controllers\PasskeySettingsController;
+use Ongudidan\Multi2fa\Http\Controllers\TwoFactorSettingsController;
 
 Route::middleware(config('multi-2fa.routes.middleware', ['web']))->group(function () {
     // Challenge Selection

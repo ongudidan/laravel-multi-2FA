@@ -2,11 +2,9 @@
 
 namespace Ongudidan\Multi2fa\Http\Controllers;
 
-use Ongudidan\Multi2fa\Services\TwoFactorService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Ongudidan\Multi2fa\Services\TwoFactorService;
 
 class TwoFactorSettingsController extends Controller
 {
@@ -19,7 +17,7 @@ class TwoFactorSettingsController extends Controller
      */
     public function show(Request $request): mixed
     {
-        if (!$this->twoFactorService->isAuthenticatorEnabled()) {
+        if (! $this->twoFactorService->isAuthenticatorEnabled()) {
             abort(403, 'Two-factor authentication is globally disabled.');
         }
 

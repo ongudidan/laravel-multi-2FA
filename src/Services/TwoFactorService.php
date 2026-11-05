@@ -2,8 +2,6 @@
 
 namespace Ongudidan\Multi2fa\Services;
 
-use Ongudidan\Multi2fa\Contracts\SettingsResolverInterface;
-use Ongudidan\Multi2fa\Mail\LoginOtpMail;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -11,11 +9,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
 use Laravel\Fortify\Events\TwoFactorAuthenticationChallenged;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 use Laravel\Passkeys\Passkey;
+use Ongudidan\Multi2fa\Contracts\SettingsResolverInterface;
+use Ongudidan\Multi2fa\Mail\LoginOtpMail;
 
 class TwoFactorService
 {
@@ -80,7 +81,7 @@ class TwoFactorService
      */
     public function userHasAuthenticator(?Authenticatable $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -89,7 +90,7 @@ class TwoFactorService
         }
 
         if (class_exists(Fortify::class) && method_exists(Fortify::class, 'confirmsTwoFactorAuthentication') && Fortify::confirmsTwoFactorAuthentication()) {
-            return $user->two_factor_secret && !is_null($user->two_factor_confirmed_at);
+            return $user->two_factor_secret && ! is_null($user->two_factor_confirmed_at);
         }
 
         return (bool) ($user->two_factor_secret ?? false);
@@ -100,7 +101,7 @@ class TwoFactorService
      */
     public function userHasPasskeys(?Authenticatable $user): bool
     {
-        if (!$user || !Schema::hasTable('passkeys')) {
+        if (! $user || ! Schema::hasTable('passkeys')) {
             return false;
         }
 
@@ -116,7 +117,7 @@ class TwoFactorService
      */
     public function userHasEmailOtp(?Authenticatable $user): bool
     {
-        if (!$user || empty($user->email)) {
+        if (! $user || empty($user->email)) {
             return false;
         }
 
@@ -138,7 +139,7 @@ class TwoFactorService
      */
     public function getAvailableMethodsForUser(?Authenticatable $user): array
     {
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
@@ -167,14 +168,15 @@ class TwoFactorService
      */
     public function canSwitchMethods(?Authenticatable $user, string $currentMethod = ''): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
         $methods = $this->getAvailableMethodsForUser($user);
 
         if ($currentMethod !== '') {
-            $otherMethods = array_filter($methods, fn($m) => $m !== $currentMethod);
+            $otherMethods = array_filter($methods, fn ($m) => $m !== $currentMethod);
+
             return count($otherMethods) > 0;
         }
 
@@ -215,14 +217,14 @@ class TwoFactorService
     public function resendLoginOtp(Request $request): ?Authenticatable
     {
         $userId = $request->session()->get('login_otp.id');
-        if (!$userId) {
+        if (! $userId) {
             return null;
         }
 
         $userModel = config('auth.providers.users.model', 'App\\Models\\User');
         $user = $userModel::find($userId);
 
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
@@ -243,7 +245,7 @@ class TwoFactorService
         $storedCode = $request->session()->get('login_otp.code');
         $expiresAt = $request->session()->get('login_otp.expires_at');
 
-        if (!$userId || !$storedCode) {
+        if (! $userId || ! $storedCode) {
             throw ValidationException::withMessages([
                 'code' => ['No pending login verification found. Please sign in again.'],
             ]);
@@ -255,13 +257,14 @@ class TwoFactorService
             ]);
         }
 
-        if (!hash_equals((string) $storedCode, (string) $code)) {
+        if (! hash_equals((string) $storedCode, (string) $code)) {
             throw ValidationException::withMessages([
                 'code' => ['The verification code is invalid.'],
             ]);
         }
 
         $userModel = config('auth.providers.users.model', 'App\\Models\\User');
+
         return $userModel::findOrFail($userId);
     }
 
@@ -331,7 +334,7 @@ class TwoFactorService
      */
     public function getUserPasskeys(Authenticatable $user): Collection
     {
-        if (!Schema::hasTable('passkeys') || !method_exists($user, 'passkeys')) {
+        if (! Schema::hasTable('passkeys') || ! method_exists($user, 'passkeys')) {
             return collect();
         }
 
@@ -404,7 +407,7 @@ class TwoFactorService
             ?? $request->session()->get('login_otp.id')
             ?? $request->session()->get('login.id');
 
-        if (!$userId) {
+        if (! $userId) {
             return '/login';
         }
 
@@ -419,11 +422,13 @@ class TwoFactorService
         if ($method === 'email') {
             $this->clearTwoFactorSessions($request);
             $this->sendLoginOtp($user, $request, (bool) $remember);
+
             return '/email-otp-login';
         }
 
         if ($method === 'authenticator') {
             $this->prepareAuthenticatorChallenge($request, $user, (bool) $remember);
+
             return '/two-factor-challenge';
         }
 
@@ -441,17 +446,19 @@ class TwoFactorService
 
         $stack = config('multi-2fa.stack', 'auto');
         if ($stack === 'auto') {
-            $hasInertia = class_exists(\Inertia\Inertia::class);
-            $isInertiaRequest = $request->header('X-Inertia') || (!empty(config('multi-2fa.views.inertia')) && $hasInertia);
+            $hasInertia = class_exists(Inertia::class);
+            $isInertiaRequest = $request->header('X-Inertia') || (! empty(config('multi-2fa.views.inertia')) && $hasInertia);
             $stack = ($hasInertia && $isInertiaRequest) ? 'inertia' : 'blade';
         }
 
-        if ($stack === 'inertia' && class_exists(\Inertia\Inertia::class)) {
+        if ($stack === 'inertia' && class_exists(Inertia::class)) {
             $inertiaView = config("multi-2fa.views.inertia.{$pageKey}", "auth/{$pageKey}");
-            return \Inertia\Inertia::render($inertiaView, $data);
+
+            return Inertia::render($inertiaView, $data);
         }
 
         $bladeView = config("multi-2fa.views.blade.{$pageKey}", "multi-2fa::{$pageKey}");
+
         return view($bladeView, $data);
     }
 }

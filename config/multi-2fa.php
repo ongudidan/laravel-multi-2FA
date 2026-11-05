@@ -1,5 +1,7 @@
 <?php
 
+use Ongudidan\Multi2fa\Services\DefaultSettingsResolver;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -41,7 +43,7 @@ return [
     | and falls back to the static `features` config above.
     |
     */
-    'settings_resolver' => \Ongudidan\Multi2fa\Services\DefaultSettingsResolver::class,
+    'settings_resolver' => DefaultSettingsResolver::class,
 
     /*
     |--------------------------------------------------------------------------

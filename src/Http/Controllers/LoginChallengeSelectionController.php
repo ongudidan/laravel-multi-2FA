@@ -2,12 +2,10 @@
 
 namespace Ongudidan\Multi2fa\Http\Controllers;
 
-use Ongudidan\Multi2fa\Services\TwoFactorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Inertia\Inertia;
-use Inertia\Response;
+use Ongudidan\Multi2fa\Services\TwoFactorService;
 
 class LoginChallengeSelectionController extends Controller
 {
@@ -20,14 +18,14 @@ class LoginChallengeSelectionController extends Controller
      */
     public function show(Request $request): mixed
     {
-        if (!$request->session()->has('login_challenge.id')) {
+        if (! $request->session()->has('login_challenge.id')) {
             $userId = $request->session()->get('login_otp.id') ?? $request->session()->get('login.id');
-            if (!$userId) {
+            if (! $userId) {
                 return redirect('/login');
             }
 
-            $remember = $request->session()->get('login_otp.remember') 
-                ?? $request->session()->get('login.remember') 
+            $remember = $request->session()->get('login_otp.remember')
+                ?? $request->session()->get('login.remember')
                 ?? false;
 
             $this->twoFactorService->initiateChallengeSelection($request, $userId, (bool) $remember);

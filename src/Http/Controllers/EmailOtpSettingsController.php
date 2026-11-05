@@ -17,7 +17,7 @@ class EmailOtpSettingsController extends Controller
      */
     public function show(Request $request): mixed
     {
-        if (!$this->twoFactorService->isEmailOtpEnabled()) {
+        if (! $this->twoFactorService->isEmailOtpEnabled()) {
             abort(403, 'Email OTP authentication is globally disabled.');
         }
 
@@ -35,7 +35,7 @@ class EmailOtpSettingsController extends Controller
      */
     public function update(Request $request): mixed
     {
-        if (!$this->twoFactorService->isEmailOtpEnabled()) {
+        if (! $this->twoFactorService->isEmailOtpEnabled()) {
             abort(403, 'Email OTP authentication is globally disabled.');
         }
 
@@ -45,8 +45,8 @@ class EmailOtpSettingsController extends Controller
         $user->email_otp_enabled = $enable;
         $user->save();
 
-        $message = $enable 
-            ? 'Email OTP verification has been enabled.' 
+        $message = $enable
+            ? 'Email OTP verification has been enabled.'
             : 'Email OTP verification has been disabled.';
 
         return back()->with('status', $message);

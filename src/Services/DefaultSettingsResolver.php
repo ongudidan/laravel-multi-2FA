@@ -2,8 +2,8 @@
 
 namespace Ongudidan\Multi2fa\Services;
 
-use Ongudidan\Multi2fa\Contracts\SettingsResolverInterface;
 use Illuminate\Support\Facades\Cache;
+use Ongudidan\Multi2fa\Contracts\SettingsResolverInterface;
 
 class DefaultSettingsResolver implements SettingsResolverInterface
 {
@@ -35,9 +35,9 @@ class DefaultSettingsResolver implements SettingsResolverInterface
             if (class_exists($settingModel)) {
                 try {
                     $setting = $settingModel::where('key', 'security_settings')->first();
-                    if ($setting && !empty($setting->value)) {
-                        $dbSettings = is_array($setting->value) 
-                            ? $setting->value 
+                    if ($setting && ! empty($setting->value)) {
+                        $dbSettings = is_array($setting->value)
+                            ? $setting->value
                             : (json_decode($setting->value, true) ?: []);
                         $defaults = array_replace_recursive($defaults, $dbSettings);
                     }
@@ -46,7 +46,7 @@ class DefaultSettingsResolver implements SettingsResolverInterface
                 }
             }
 
-            if (!empty($defaults['logout_on_browser_close'])) {
+            if (! empty($defaults['logout_on_browser_close'])) {
                 config(['session.expire_on_close' => true]);
             }
 

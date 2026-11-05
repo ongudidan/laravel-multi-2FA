@@ -2,33 +2,34 @@
 
 namespace Ongudidan\Multi2fa\Actions;
 
-use Ongudidan\Multi2fa\Services\TwoFactorService;
 use Illuminate\Auth\Events\Failed;
+use Illuminate\Auth\SessionGuard;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Fortify;
 use Laravel\Fortify\LoginRateLimiter;
+use Ongudidan\Multi2fa\Services\TwoFactorService;
 
 class RedirectIfEmailOtpRequired
 {
     /**
      * The guard implementation.
      *
-     * @var \Illuminate\Contracts\Auth\StatefulGuard|\Illuminate\Auth\SessionGuard
+     * @var StatefulGuard|SessionGuard
      */
     protected $guard;
 
     /**
      * The login rate limiter instance.
      *
-     * @var \Laravel\Fortify\LoginRateLimiter
+     * @var LoginRateLimiter
      */
     protected $limiter;
 
     /**
      * The two-factor authentication service.
      *
-     * @var \Ongudidan\Multi2fa\Services\TwoFactorService
+     * @var TwoFactorService
      */
     protected $twoFactorService;
 
@@ -52,13 +53,13 @@ class RedirectIfEmailOtpRequired
         $passkeyEnabledGlobally = $this->twoFactorService->isPasskeyEnabled();
 
         // If no 2FA methods are enabled globally, proceed with standard login
-        if (!$emailOtpEnabled && !$twoFactorEnabledGlobally && !$passkeyEnabledGlobally) {
+        if (! $emailOtpEnabled && ! $twoFactorEnabledGlobally && ! $passkeyEnabledGlobally) {
             return $next($request);
         }
 
         // Validate user's credentials early so we can check user configurations
         $user = $this->validateCredentials($request);
-        if (!$user) {
+        if (! $user) {
             return $next($request);
         }
 
